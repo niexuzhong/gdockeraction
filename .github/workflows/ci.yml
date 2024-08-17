@@ -60,10 +60,8 @@ jobs:
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
+        
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
@@ -106,13 +104,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
           name: bin-ipq40xx-arm
-          path: bin/targets/ipq40xx/arm/*
+          path: openwrt/bin/targets/ipq40xx/arm/*
 
     - name: Upload dl to artifacts
       uses: actions/upload-artifact@v3
       with:
           name: dl
-          path: dl/*
+          path: openwrt/dl/*
           
   release:
     needs: [ build ]
