@@ -136,5 +136,5 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: ${{ env.NAME }}
           body_path: Body.md
-          files:          
-            *.tar
+          files: |   
+              *.tar
