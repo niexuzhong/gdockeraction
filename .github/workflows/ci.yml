@@ -82,28 +82,7 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
-    - name: Compile the firmware
-      id: compile
-      run: |
-        cd openwrt
-        echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
-        echo "status=success" >> $GITHUB_OUTPUT
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-
-    - name: Check space usage
-      if: (!cancelled())
-      run: df -hT
       
-    - name: Upload bin to artifacts
-      uses: actions/upload-artifact@v3
-      with:
-          name: bin-ipq40xx-arm
-          path: openwrt/bin/targets/ipq40xx/arm/*
-
     - name: Upload dl to artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -125,16 +104,9 @@ jobs:
           name: dl
           path: dl/
 
-      - name: Download bin from artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: bin-ipq40xx-arm
-          path: bin/targets/ipq40xx/arm/
-
       - name: Tar
         run: |
           tar cvf dl.tar -C dl/ .
-          tar cvf bin-ipq40xx.tar -C bin/targets/ipq40xx/arm/ .
 
       - name: Generate release informations
         run: |
@@ -151,11 +123,6 @@ jobs:
             Build time: \`$(date -d "${TIME}" -u +'%Y-%m-%d %H:%M:%S %Z(%:z)')\`
             Release version: ${TAG}
 
-            ## Sources
-            $(cat bin/targets/ipq40xx/arm/feeds.buildinfo | awk -F'[ ^]' '{printf "%s: `%s`\n", $2, $4}')
-
-            ## SHA256
-            $(cat bin/targets/ipq40xx/arm/sha256sums | awk '{printf "%s: `%s`\n", $2, $1}' | sed -E 's/^\*//')
           EOF
 
           echo "NAME=$(head --line=1 Release.md)" >>$GITHUB_ENV
@@ -169,7 +136,5 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: ${{ env.NAME }}
           body_path: Body.md
-          files: |
-            bin/targets/ipq40xx/arm/sha256sums
-            bin/targets/ipq40xx/arm/*.*
+          files:          
             *.tar
